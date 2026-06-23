@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archiv</title>
+<style>
+  /* ── Tokens ─────────────────────────────────────────── */
+  :root {
+    --ink:    #1a1917;
+    --dim:    #6b6a66;
+    --rule:   #d8d6d0;
+    --bg:     #f7f5f1;
+    --paper:  #ffffff;
+    --accent: #2b4d8e;
+    --mono:   'Courier New', Courier, monospace;
+    --serif:  Georgia, 'Times New Roman', serif;
+    --sans:   system-ui, -apple-system, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ──────────────────────────────────────────── */
+  .site-header {
+    border-bottom: 1px solid var(--ink);
+    padding: 2rem 0 1.25rem;
+    margin: 0 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .site-title {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    font-weight: normal;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  nav { display: flex; gap: 1.5rem; margin-left: auto; }
+  nav a {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  nav a:hover, nav a.active { color: var(--ink); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  /* ── Section headings ────────────────────────────────── */
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* ── Photo grid ──────────────────────────────────────── */
+  #section-fotos { display: block; }
+  #section-texte  { display: none; }
+
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+
+  .photo-card {
+    background: var(--paper);
+    cursor: pointer;
+    transition: opacity 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .photo-card:hover { opacity: 0.88; }
+
+  .photo-card img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+    background: var(--rule);
+  }
+
+  /* Placeholder wenn kein Bild vorhanden */
+  .photo-placeholder {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #e8e6e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .photo-meta {
+    padding: 0.85rem 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .photo-meta .title {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+  }
+  .photo-meta .date {
+    font-size: 0.72rem;
+    color: var(--dim);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Lightbox ────────────────────────────────────────── */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,19,17,0.93);
+    z-index: 100;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+  #lightbox.open { display: flex; align-items: flex-start; justify-content: center; }
+
+  .lightbox-inner {
+    max-width: 860px;
+    width: 100%;
+    margin-top: 2rem;
+  }
+
+  #lightbox img {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+    background: transparent;
+  }
+
+  .lightbox-caption {
+    color: #c8c6c0;
+    margin-top: 1.5rem;
+    border-top: 1px solid #3a3935;
+    padding-top: 1.25rem;
+  }
+  .lightbox-caption h2 {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: normal;
+    color: #f0ede8;
+    margin-bottom: 0.4rem;
+  }
+  .lightbox-caption p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  .lightbox-caption .date {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: #7a7870;
+    margin-top: 0.75rem;
+    letter-spacing: 0.06em;
+  }
+
+  .lightbox-close {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.75rem;
+    color: #c8c6c0;
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.25rem;
+  }
+  .lightbox-close:hover { color: #fff; }
+
+  /* ── Essay list ──────────────────────────────────────── */
+  .essay-list { list-style: none; }
+  .essay-item {
+    border-bottom: 1px solid var(--rule);
+    padding: 1.75rem 0;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .essay-item:hover { opacity: 0.7; }
+  .essay-item:first-child { border-top: 1px solid var(--rule); }
+
+  .essay-date {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+    padding-top: 0.3rem;
+    line-height: 1.5;
+  }
+
+  .essay-body .essay-title {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: normal;
+    margin-bottom: 0.45rem;
+    line-height: 1.3;
+  }
+  .essay-body .essay-excerpt {
+    font-size: 0.9rem;
+    color: var(--dim);
+    line-height: 1.7;
+  }
+  .essay-body .essay-tag {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule);
+    color: var(--dim);
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+  }
+
+  /* ── Essay reader ────────────────────────────────────── */
+  #essay-reader {
+    display: none;
+    max-width: 640px;
+  }
+  #essay-reader.open { display: block; }
+  #section-texte.reader-mode .essay-list { display: none; }
+  #section-texte.reader-mode #essay-reader { display: block; }
+
+  .reader-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 2.5rem;
+  }
+  .reader-back:hover { color: var(--ink); }
+
+  .reader-title {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: normal;
+    line-height: 1.25;
+    margin-bottom: 1rem;
+  }
+  .reader-meta {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .reader-body {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #2a2926;
+  }
+  .reader-body p { margin-bottom: 1.5rem; }
+  .reader-body p:last-child { margin-bottom: 0; }
+
+  /* ── Über-Seite ─────────────────────────────────────── */
+  #section-ueber { display: none; max-width: 560px; }
+
+  .about-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #2a2926;
+  }
+  .about-text p { margin-bottom: 1.5rem; }
+
+  /* ── Footer ──────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.72rem;
+    font-family: var(--mono);
+    color: var(--dim);
+    border-top: 1px solid var(--rule);
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 600px) {
+    .site-header { margin: 0 1rem; gap: 1rem; }
+    main { padding: 2rem 1rem 4rem; }
+    .essay-item { grid-template-columns: 1fr; gap: 0.25rem; }
+    .essay-date { padding-top: 0; }
+    .reader-title { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="site-title" href="#" onclick="showSection('fotos')">Dein Name</a>
+  <nav>
+    <a id="nav-fotos" class="active" onclick="showSection('fotos')">Fotos</a>
+    <a id="nav-texte" onclick="showSection('texte')">Texte</a>
+    <a id="nav-ueber" onclick="showSection('ueber')">Über</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── FOTOS ──────────────────────────────────────── -->
+  <section id="section-fotos">
+    <p class="section-label">Fotografie</p>
+
+    <div class="photo-grid">
+
+      <!-- ✦ Foto hinzufügen: Kopiere diesen Block und passe src, title, date und caption an -->
+      <div class="photo-card" onclick="openLightbox(this)">
+        <div class="photo-placeholder">Foto 1</div>
+        <!-- Wenn du ein Bild hast: ersetze die Zeile oben durch:
+             <img src="fotos/dein-bild.jpg" alt="Kurze Bildbeschreibung"> -->
+        <div class="photo-meta">
+          <div class="title">München im Nebel</div>
+          <div class="date">2024 — 03</div>
+        </div>
+        <div class="lightbox-data" style="display:none"
+          data-title="München im Nebel"
+          data-date="März 2024"
+          data-caption="Eine kurze Beschreibung des Fotos, was dich interessiert hat, den Moment oder den Ort. Dieser Text erscheint wenn jemand auf das Bild klickt."
+          data-src="">
+        </div>
+      </div>
+
+      <div class="photo-card" onclick="openLightbox(this)">
+        <div class="photo-placeholder">Foto 2</div>
+        <div class="photo-meta">
+          <div class="title">Isar, Morgen</div>
+          <div class="date">2024 — 06</div>
+        </div>
+        <div class="lightbox-data" style="display:none"
+          data-title="Isar, Morgen"
+          data-date="Juni 2024"
+          data-caption="Frühmorgens an der Isar, bevor die Stadt aufgewacht ist."
+          data-src="">
+        </div>
+      </div>
+
+      <div class="photo-card" onclick="openLightbox(this)">
+        <div class="photo-placeholder">Foto 3</div>
+        <div class="photo-meta">
+          <div class="title">Alpen, Winter</div>
+          <div class="date">2024 — 12</div>
+        </div>
+        <div class="lightbox-data" style="display:none"
+          data-title="Alpen, Winter"
+          data-date="Dezember 2024"
+          data-caption="Beschreibe hier was du bei diesem Foto gedacht oder gefühlt hast."
+          data-src="">
+        </div>
+      </div>
+
+      <!-- Ende Beispiel-Fotos -->
+
+    </div>
+  </section>
+
+
+  <!-- ── TEXTE ──────────────────────────────────────── -->
+  <section id="section-texte">
+    <p class="section-label">Texte &amp; Essays</p>
+
+    <ul class="essay-list">
+
+      <!-- ✦ Text hinzufügen: Kopiere diesen Block -->
+      <li class="essay-item" onclick="openEssay(this)">
+        <div class="essay-date">2025<br>Jan</div>
+        <div class="essay-body">
+          <div class="essay-title">Über das Fotografieren ohne Ziel</div>
+          <div class="essay-excerpt">
+            Was bedeutet es, eine Kamera mitzunehmen ohne zu wissen, was man sucht — und ob das überhaupt ein Problem ist.
+          </div>
+          <span class="essay-tag">Essay</span>
+        </div>
+        <!-- Der vollständige Text des Artikels -->
+        <div class="essay-content" style="display:none"
+          data-title="Über das Fotografieren ohne Ziel"
+          data-date="Januar 2025"
+          data-tag="Essay">
+          <p>Hier steht der vollständige Text deines Essays. Du kannst ihn einfach zwischen die &lt;p&gt;-Tags einfügen.</p>
+          <p>Jeder neue Absatz bekommt seinen eigenen &lt;p&gt;-Block. Das war alles — kein Markdown, kein besonderes Format nötig.</p>
+          <p>Schreib so viel du möchtest. Die Seite scrollt automatisch mit.</p>
+        </div>
+      </li>
+
+      <li class="essay-item" onclick="openEssay(this)">
+        <div class="essay-date">2024<br>Sep</div>
+        <div class="essay-body">
+          <div class="essay-title">Notizen zu Bernd und Hilla Becher</div>
+          <div class="essay-excerpt">
+            Was mich an ihrem konsequenten Blick auf Industriearchitektur fasziniert und was ich daraus mitnehme.
+          </div>
+          <span class="essay-tag">Kunstkritik</span>
+        </div>
+        <div class="essay-content" style="display:none"
+          data-title="Notizen zu Bernd und Hilla Becher"
+          data-date="September 2024"
+          data-tag="Kunstkritik">
+          <p>Hier steht dein Text über Bernd und Hilla Becher.</p>
+          <p>Zweiter Absatz mit weiteren Gedanken.</p>
+        </div>
+      </li>
+
+      <!-- Ende Beispiel-Texte -->
+
+    </ul>
+
+    <!-- Essay-Leseansicht -->
+    <div id="essay-reader">
+      <button class="reader-back" onclick="closeEssay()">← Alle Texte</button>
+      <h1 class="reader-title" id="reader-title"></h1>
+      <div class="reader-meta" id="reader-meta"></div>
+      <div class="reader-body" id="reader-body"></div>
+    </div>
+  </section>
+
+
+  <!-- ── ÜBER ───────────────────────────────────────── -->
+  <section id="section-ueber">
+    <p class="section-label">Über</p>
+    <div class="about-text">
+      <!-- ✦ Hier deinen Text über dich eintragen -->
+      <p>Kurzer Text über dich — wer du bist, was dich interessiert, warum du fotografierst oder schreibst. Zwei bis drei Sätze reichen völlig.</p>
+      <p>Diese Seite ist ein persönliches Archiv. Kein Instagram, kein Algorithmus — nur Bilder und Texte, die ich festhalten möchte.</p>
+      <p>Kontakt: <a href="mailto:deine@email.de" style="color:var(--accent)">deine@email.de</a></p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  &mdash; Archiv &mdash;
+</footer>
+
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightboxIfBg(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <div class="lightbox-inner">
+    <img id="lb-img" src="" alt="" style="display:none">
+    <div id="lb-placeholder" class="photo-placeholder" style="display:none; height:40vh; width:100%; background:#2a2926; color:#6b6a66;">Bild nicht geladen</div>
+    <div class="lightbox-caption">
+      <h2 id="lb-title"></h2>
+      <p id="lb-caption"></p>
+      <div class="date" id="lb-date"></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── Navigation ─────────────────────────────────────────
+function showSection(name) {
+  ['fotos','texte','ueber'].forEach(s => {
+    document.getElementById('section-' + s).style.display = 'none';
+    document.getElementById('nav-' + s).classList.remove('active');
+  });
+  document.getElementById('section-' + name).style.display = 'block';
+  document.getElementById('nav-' + name).classList.add('active');
+
+  // Essay-Leser zurücksetzen wenn man Texte verlässt
+  if (name !== 'texte') {
+    document.getElementById('section-texte').classList.remove('reader-mode');
+  }
+}
+
+// ── Lightbox ───────────────────────────────────────────
+function openLightbox(card) {
+  const d = card.querySelector('.lightbox-data').dataset;
+  document.getElementById('lb-title').textContent   = d.title;
+  document.getElementById('lb-caption').textContent = d.caption;
+  document.getElementById('lb-date').textContent    = d.date;
+
+  const img = document.getElementById('lb-img');
+  const ph  = document.getElementById('lb-placeholder');
+
+  if (d.src && d.src.trim() !== '') {
+    img.src = d.src;
+    img.alt = d.title;
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+  } else {
+    img.style.display = 'none';
+    ph.textContent    = d.title;
+    ph.style.display  = 'flex';
+  }
+
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeLightboxIfBg(e) {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ── Essays ─────────────────────────────────────────────
+function openEssay(item) {
+  const d    = item.querySelector('.essay-content').dataset;
+  const body = item.querySelector('.essay-content').innerHTML;
+
+  document.getElementById('reader-title').textContent = d.title;
+  document.getElementById('reader-meta').textContent  = d.date + (d.tag ? ' — ' + d.tag : '');
+  document.getElementById('reader-body').innerHTML    = body;
+
+  document.getElementById('section-texte').classList.add('reader-mode');
+  window.scrollTo(0, 0);
+}
+
+function closeEssay() {
+  document.getElementById('section-texte').classList.remove('reader-mode');
+}
+</script>
+
+</body>
+</html>
